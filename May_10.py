@@ -41,6 +41,9 @@ for x in xrange(10):
 		continue
  
         print x
+print 'def of demultiplex'
+print demultiplex(0),demultiplex(1),demultiplex(2),demultiplex(3)
+
 
 
 
