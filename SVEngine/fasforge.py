@@ -94,12 +94,12 @@ starttime=time.time()
 #			varlist[var][9] = None	#VAR INS SIZE
 #	return varlist
 
-def var2seq(brpt,reffile,nligation,oprefix): #assume varbed is checked for nonoverlapping    Chao:what is brpt？ (breakpoint?) what is nligation(把整个序列分成nligetion段？)
+def var2seq(brpt,reffile,nligation,oprefix): #assume varbed is checked for nonoverlapping    Chao:what is brpt？ (breakpoint?) what is nligation(把整个序列分成nligetion段？)Ans:nligation是一个缓冲区，把plansize的两端都加上一个长为nligation的区间，作为缓冲！
 	#print brpt,reffile,nligation,oprefix
 	ref=pysam.Fastafile(reffile.name); seq=[]#reffile是什么，他为什么可以访问name？？  Chao:name可以输出路径和文件名            这里还实例化了一个类ref;定义了空数组seq,用来装什么呢。
 	for i in xrange(0,ref.nreferences): #iterate through （i在0到参考序列条数之间变动）                nreferences：ref中序列的条数
 		rname=ref.references[i]; rlen=ref.lengths[i]; segst=0;#reference是一个tuple，由所有的名字组成。lengths是这个tuple的长度。
-		rseq=Seq(ref.fetch(rname,0,rlen), generic_dna)   #rseq即使这条序列  AGCT~
+		rseq=Seq(ref.fetch(rname,0,rlen), generic_dna)   #rseq即使这条序列  AGCT~   pysam.fastfile.fetch()作用是取某一段特定的序列！
 		if brpt.get(rname,None) == None: #no var at all  Chao:在这条ref中没有variant；  在brpt这个字典key中查找rname，找不到返回None！
 			seg = [ rseq ]       #如果没有var，就直接整条ref的序列放到了seg中
 		else: #1+ vars
@@ -151,8 +151,8 @@ def main(args):
 	reffile = args.reffile
 	gapfile = args.gapfile
 	parfile = args.parfile
-	parlist = ConfigParser.ConfigParser()
-	parlist.readfp(parfile)
+	parlist = ConfigParser.ConfigParser()#操作配置文件
+	parlist.readfp(parfile)#读取配置选项
 	plansize = args.plansize
 	mergemax = args.mergemax
 	layout = args.layout
@@ -171,7 +171,7 @@ def main(args):
 		oname=varfile.name.rsplit(".")[0]	#以'.'划分取第0个; oname是var文件的名字。除去.var的后缀
 		#don't allow mode 3
 		print >>sys.stderr, "either a .meta or a .var file can be specified but not both"
-		quit()#既没有meta文件也没有var文件报错，退出？？这里应该是不能两个都有
+		quit()#既有meta文件也有var文件报错，退出.why，为什么不让varfile和metafile同时出现呢？？？
 	elif varfile!=None and metafile==None:  #有var文件而没有meta文件
 		runmode=2;
 		oname=varfile.name.rsplit(".")[0]	
@@ -182,13 +182,13 @@ def main(args):
 		raise Exception("must provide meta and/or var files!")
 	oprefix = oname if not args.oprefix else args.oprefix#没有提供oprefix就把oname复制给oprefix,如果提供了，就用提供的
 	nligation = 0; nploid = 1; #in fasforge, nligation is always 0 and nploid always is 1        ## fastforge中都处理的是单倍体
-	freq1 = [ float(f) for f in args.mixfreq.split(",") ]
+	freq1 = [ float(f) for f in args.mixfreq.split(",") ]#split之后成为一个list
 	for f in freq1:
 		assert f>=0 and f<=1, "mixfreq must be a float between 0 and 1" #断言，f若不再0，1之间就报错！！
-	try:
+	try:#try 后面的语句作用是：把gapfile中的区间在左右各自延长的edgein bp的长度。#TODO 什么用呢？？
 		sizefile = mf.fas2size(reffile.name) #create genome size file
 		gaptab=pybedtools.BedTool(gapfile.read(),from_string=True)#用已有的BED文件生成了一个BEDtool。
-		gaptab=gaptab.slop(g=sizefile, b=edgein)#TODO 暂且没有查到slop是干什么用的！！！！！！！！
+		gaptab=gaptab.slop(g=sizefile, b=edgein)# slop改变序列的interval,可以查看bedtools中的slop suboption，详见firfox书签！！！！gaptab是个bed file！！
 	except pybedtools.cbedtools.BedToolsFileError:
 		raise Exception("incorrect gapfile provided, must in BED format")
 	#create a string meta file:
@@ -198,9 +198,9 @@ def main(args):
 	#metastr='\n'.join([ "\t".join(['FINS',str(2),'adeno.fna,'+inssize,'fix_1','fix_1','fix_1','fix_1','fix_1' ]),
 	#					"\t".join(['DINS',str(2),'fix_100_200','fix_1','fix_1','fix_1','fix_1','fix_1' ]) ])
 	varlist = collections.OrderedDict()
-	dic={'nligation':nligation,'varlist':varlist,'oprefix':oprefix,'reffile':reffile,'nploid':nploid,'plansize':plansize,'varcnt':0,'edgein':edgein,'gaptab':gaptab,'varfile':varfile,'parfile':parfile,'parlist':parlist,'nprocs':nprocs,'burnin':burnin,'mergemax':mergemax}
+	dic={'nligation':nligation,'varlist':varlist,'oprefix':oprefix,'reffile':reffile,'nploid':nploid,'plansize':plansize,'varcnt':0,\'edgein':edgein,gaptab':gaptab,'varfile':varfile,'parfile':parfile,'parlist':parlist,'nprocs':nprocs,'burnin':burnin,'mergemax':mergemax}
 	print >>sys.stderr, "runmode=", runmode
-	dic['hapseq']=[pysam.Fastafile(reffile.name)];
+	dic['hapseq']=[pysam.Fastafile(reffile.name)];#这样字典dic中有多了一组值！在这里，hapseq就是reference
 
 	if runmode > 1: #have var input
 		varintype = varfile.name.split(".")[-1]     
@@ -218,24 +218,30 @@ def main(args):
 		dic['varcnt']=len(varlist) #this is needed for continuously counting
 		dic['varlist']=varlist #this is needed for continuously counting
 		#d.iloc[0:1,0:1]; deoverlapping
-		vartab=mf.var2bed(mf.Bunch(dic))
+		vartab=mf.var2bed(mf.Bunch(dic))#Chao: trans varfile to bed file
 		#print "br1"
-		if(len(varlist)>1): #only needed if input is more than 2
+		if(len(varlist)>1): #only needed if input is more than 2#chao:这个if的作用是检查区间是否重复，没有办法直接检查varfile，只能是转化成bedfile，在利用bedtools检查。
 				varlist=mf.deovlpvar(dic) 
 				dic['varcnt']=len(varlist) 
 				dic['varlist']=varlist 
 				vartab=mf.var2bed(mf.Bunch(dic))
 				assert mf.chkvar(vartab) == True, "==Warn: varfile still contains self overlaps, which is not allowed, bail out"
 		#print "br2"
-		gaptab=vartab.cat(gaptab.each(pybedtools.featurefuncs.extend_fields,n=vartab.field_count()).saveas())
+		gaptab=vartab.cat(gaptab.each(pybedtools.featurefuncs.extend_fields,n=vartab.field_count()).saveas())#此函数的作用是把gapfile 和vartab这两个bed文件结合成一个，由于列多少可能不同。所以要用点把gaptab的列补全成和vartab的列一样多。
+#pybedtools.BEDtools.cat 的作用是把两个bed file 结合起来，默认把feature也结合起来。
+#pybedtools.BEDtools.each的作用是用user自己定义的函数于每一个feature（bed中的每一条）。输入输出都要是interval
+#extend_fields的作用  Pads the fields of the feature with "." to a total length of n fields, CHAO: 扩展bedfile的列，用.来补
+#field_count的作用 Return the number of fields in the features this file contains. Checks the first n features.  TMD,就是统计bedfile有几列
+#saveas :Make a copy of the BedTool
 		dic['gaptab']=gaptab #considerring var tab as pre-existing mask that works for meta-variant 
+
 		#print "br3"
 
 	if runmode%2 == 1: #have meta input, merge var with meta
 		metatab = mf.CommentedFile(metafile)
 		#for row in metatab: #force input of fix_1 columns 5-8 
 		#	row[4:8]=['fix_1']*4
-		varlist,varcnt = mf.makevar(mf.Bunch(dic),metatab,fas=True)
+		varlist,varcnt = mf.makevar(mf.Bunch(dic),metatab,fas=True)#把meta装换成var
 		dic['varlist'] = varlist
 		dic['varcnt'] = varcnt
 		vartab=mf.var2bed(mf.Bunch(dic))
@@ -244,7 +250,7 @@ def main(args):
 				dic['varcnt']=len(varlist) 
 				dic['varlist']=varlist 
 				vartab=mf.var2bed(mf.Bunch(dic))
-				assert mf.chkvar(vartab) == True, "==Warn: varfile still contains self overlaps, which is not allowed, bail out"
+				assert mf.chkvar(vartab) == True, "==Warn: varfile still contains self overlaps, which is not allowed, bail out"                             #chkvar函数中用到了py的count函数和sort函数！检验有没有重叠的办法主要就是把区间合并之后看数目和合并之前是否一样！
 
 	mf.var2file(mf.Bunch(dic))
 	#read in bedpe to generate varlist
@@ -252,7 +258,7 @@ def main(args):
 	#we also need to check whether the position is properly selected 
 	brpt=collections.OrderedDict()
 	#print "br4"
-	for key in varlist.keys():
+	for key in varlist.keys():#把所有的var用brpt表示，brpt［chr］［pos］
 		var = varlist[key]
 		if brpt.get(var[4],None) == None:
 			brpt[var[4]] = collections.OrderedDict({var[5]:var})
@@ -261,12 +267,18 @@ def main(args):
 	#print "br5"
 	ref = pysam.Fastafile(reffile.name)
 	seq0 = { 'filename':reffile.name, 'seq':[ SeqRecord(Seq(ref.fetch(ref.references[i],0,ref.lengths[i]) ),id=ref.references[i],name=ref.references[i],description=ref.references[i]) for i in xrange(0,ref.nreferences) ] } #input sequence
+#SeqRecord:该类是 Bio.SeqIO 序列输入/输出交互界面的基本数据类型。可以把identifiers 和features等高级属性与序列关联起来。详见firefox书签“biopython”
 	#print "br6"
 	seq1 = var2seq(brpt,reffile,nligation,oprefix)
 	print >>sys.stderr, "done var2seq", time.time()-starttime, " seconds" 
 
-	nlibrary=parlist.getint('xwgsim', 'nlibrary')
+	nlibrary=parlist.getint('xwgsim', 'nlibrary')#从xwgism中读取nlibrary作为int型
+#Chao:关于configparse的注释
+#ConfigParser 是用来读取配置文件的包。配置文件的格式如下：中括号“[ ]”内包含的为section。section 下面为类似于key-value 的配置内容。
 	libnames=json.loads(parlist.get('xwgsim', 'libnames'))
+#Chao:
+#json.loads
+#
 	#bams = [None] * nlibrary
 
 	if layout:
@@ -277,6 +289,7 @@ def main(args):
 	for lib in range(0,nlibrary):
 		for fi in range(0,len(freq1)):
 			pariter.append([parlist,nligation,reffile.name,nploid,seq0,lib,freq1[fi],seq0,seq1,lib,oprefix,mergemax])
+                                      #0	 1	      2		3	4   5	 6	  7	8   9	10	  11
 
 	#NOTE: debug code
 	ffq=[]
@@ -284,8 +297,8 @@ def main(args):
 		for parit in pariter:
 			ffq.append(makefq(parit))
 	else:
-		pool = Pool(processes=int(nprocs))
-		ffq=pool.map(makefq,pariter,1)
+		pool = Pool(processes=int(nprocs))#pool处理多个进程  进程池
+		ffq=pool.map(makefq,pariter,1)#调用了xwgsim。生成了read数据／多线程下
 	print >>sys.stderr, "done var2fq", time.time()-starttime, " seconds"
 
 	if outbam:
@@ -311,7 +324,7 @@ def main(args):
 	return None
 
 #OBSOLETE
-def makebam(parit):		
+def makebam(parit):#Chao：这个函数好像没有用，在fasforge和muteforge中		
 	print "processing lib %s freq %s regions" % (str(parit[5]),str(parit[6]))
 	parlist=parit[0]; nligation=parit[1]; rname=parit[2]; nploid=parit[3]; seq0=parit[4]; lib=parit[5]; freq1=parit[6]; freq0=1-freq1; seq0=parit[7]; seq1=parit[8]; lib=parit[9]; oprefix=parit[10]
 	libnames=json.loads(parlist.get('xwgsim', 'libnames'))

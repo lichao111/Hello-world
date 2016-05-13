@@ -18,7 +18,7 @@ starttime=time.time()
 devnull=open(os.devnull, 'w')
 io_quote = "this is for end user"
 code_quote = 'this is for program'
-maxrefnum = 24 			        #for debugging and human, should set to a big number afterwards
+maxrefnum = 24 	#22+X+Y		        #for debugging and human, should set to a big number afterwards
 #burnin = 100000			#burnin region for each chromosome, to avoid N rich regions
 varfile_names = ['#VID','MID','VARFREQ','VARHAP','VARCHR','VARPOS','VARDEL','VARDELSIZE','VARINS','VARINSSEQ(HAP/SEQFILE,CHR:START-END,COPY,REVCOMP)']
 varbed_names = ['#CHROM','START','END','VID','MID','VARFREQ','VARHAP','VARCHR','VARPOS','VARDEL','VARDELSIZE','VARINS','VARINSSEQ(HAP/SEQFILE,CHR:START-END,COPY,REVCOMP)']
@@ -31,12 +31,12 @@ class CommentedFile:
 	def __init__(self, f, commentstring="#"):              #_init_相当于c++中的构造函数  self相当于this指针，指向类本身
 		self.f = csv.reader(f,delimiter='\t')
 		self.commentstring = commentstring
-	def next(self):#此语句的作用是返回第一个不已#开头的行内容，类中的函数至少要有一个参数s’elf‘。
+	def next(self):#此语句的作用是返回第一个不已#开头的行内容，类中的函数至少要有一个参数'self'。
 		line = self.f.next()
 		while line[0].startswith(self.commentstring):#判断是否以#开头，如果是，返回true
 			line = self.f.next()#迭代到下一行，继续判断第一个字符是否以井号开头
 		return line
-	def __iter__(self):
+	def __iter__(self):#一个对象要想用于for in循环，就必须有__iter__方法！！！
 		return self
 
 class Bunch(object):
@@ -120,8 +120,9 @@ def locatemin(a):# Chao:定位最小值，并且返回他的位置下标
 	smallest = min(a)
 	return smallest, [index for index, element in enumerate(a) if smallest == element]  #chao:python的列表解析
 
-def demultiplex(m):#Chao:此函数的作用好像是把某一个树转换成二进制之后倒序，把是1的下标输出。I can't understand!
+def demultiplex(m):#Chao:此函数的作用好像是把某一个数转换成二进制之后倒序，把是1的下标输出。
 	return [i for i, x in enumerate([int(x) for x in bin(m)[2:][::-1]]) if x == 1]#bin:转换成二进制数
+#enumerate()的作用是遍历下标及元素
 
 #def CountUnique(mylist):
 #	h = {}
@@ -152,7 +153,7 @@ def main(args):
 	layout = args.layout
 	outbam = args.outbam
 	burnin = args.burnin
-	edgein = args.edgein
+	edgein = args.edgein	
 	mergemax = args.mergemax
 	tempfile.tempdir = args.tmpdir
 	try:
@@ -212,7 +213,7 @@ def main(args):
 		sizefile = fas2size(hapseq[0].filename)		 #require hap file to be the same size and gap applies to all
 		#FIXME: this sizefile has also to be hapseq dependent 
 		gaptab=pybedtools.BedTool(gapfile.read(),from_string=True)
-		gaptab=gaptab.flank(g=sizefile, b=edgein)							#need to merge
+		gaptab=gaptab.flank(g=sizefile, b=edgein)#Chao；Create new intervals from the flanks of existing intervals.							#need to merge
 	except pybedtools.cbedtools.BedToolsFileError:
 		raise Exception("incorrect gapfile provided, must in BED format")
 
@@ -330,7 +331,7 @@ def fas2size(fasfile):#计算出每条ref的条数，一行一个，存储在一
 def chkvar(varbed):#
 	#print varbed.sort().merge()
 	#print varbed.sort()
-	if varbed.sort().merge().count() == varbed.sort().count(): return True;
+	if varbed.sort().merge().count() == varbed.sort().count(): return True;#count好像和py中独有的，在bedtools中没有
 	else: return False
 
 def ppbam(bun,bamfiles):
@@ -905,13 +906,13 @@ def file2var(bun):
 	for row in ifile: 
 		varlist[row[0]]=row;
 	for var in varlist.keys():
-		varlist[var][2] = float(varlist[var][2])
-		varlist[var][3] = int(varlist[var][3])
-		varlist[var][5] = int(varlist[var][5])-nligation
-		varlist[var][6] = varlist[var][6] in ['True']#Chao:chang str to bool
-		varlist[var][7] = int(varlist[var][7])
-		varlist[var][8] = varlist[var][8] in ['True']
-		varlist[var][9] = readins(varlist[var][9])
+		varlist[var][2] = float(varlist[var][2])#VARFRAQ
+		varlist[var][3] = int(varlist[var][3])#VARHAP
+		varlist[var][5] = int(varlist[var][5])-nligation#position
+		varlist[var][6] = varlist[var][6] in ['True']#Chao:chang str to bool//vardel
+		varlist[var][7] = int(varlist[var][7])#dele size
+		varlist[var][8] = varlist[var][8] in ['True']#varinser
+		varlist[var][9] = readins(varlist[var][9])#inder info ， 函数定义在先面， 返回 list。
 	return varlist
 
 def readins(cell):
@@ -920,7 +921,7 @@ def readins(cell):
 	start = int(tmp[1].split(':')[1].split('-')[0])-1; span = int(tmp[1].split(':')[1].split('-')[1])-start
 	return [ tmp[0], chr, start, span, copy, True if tmp[3] == 'r' else False ]
 
-def formatins(cell):
+def formatins(cell):#把varfile中最后一列的信息转化成文本
 	#cell = ['example.fasta', '22', 25202000, 1000, 2, False] #0-based index cell[1] and 1-based cell[2]
 	#print cell
 	if not cell: return 'None';
@@ -970,14 +971,14 @@ def makevar(bun,metatab,fas=False):         # Chao:change meta to var!!!   Y of 
 	varlist = bun.varlist
 	varcnt = bun.varcnt
 	#print >>sys.stderr, "input varcnt:", varcnt												#total number of input vars
-	trunks = maketrunks(bun)	 													#trunks is in bed format
+	trunks = maketrunks(bun)	#trunks in bed format!! 													#trunks is in bed format
 	trunks,stretches = blocktrunks(trunks,gaptab)				#block trunks that not usable
 	trunks=trunks.to_dataframe()
 	# seqfile,sizestring #random seq from seqfile using sizestring
 	# seqfile #use seqfile exactly
 	metacnt={}; delvec=set(); finsvec=set(); dinsvec=set(); dupvec=set(); travec=set(); idupvec=set(); invvec=set(); itravec=set(); idinsvec=set();
 	for var in varlist:
-		meta=varlist[var][1].split("_")[0]
+		meta=varlist[var][1].split("_")[0]#由varfile中第二列的MID寻找类型!九种类型
 		if meta == "DEL":
 			delvec.add(varlist[var][1])
 		elif meta == "FINS":
@@ -1008,7 +1009,7 @@ def makevar(bun,metatab,fas=False):         # Chao:change meta to var!!!   Y of 
 	
 	rows=[]
 	for row in metatab:
-		if fas: row[4:8]=['fix_1']*4	#override by 'fix_1' for fasforge
+		if fas: row[4:8]=['fix_1']*4	#override by 'fix_1' for fasforge!   Chao:fasforge中的metafile的四到第七列都是fix_1
 		rows.append(row)
 		
 	rowix=range(0,len(rows))
@@ -1071,11 +1072,13 @@ def makevar(bun,metatab,fas=False):         # Chao:change meta to var!!!   Y of 
 			donor = demultiplex(donorvec[i]) #this is a list of donor haplos, 0-indexed, empty if none
 			recpt = demultiplex(recptvec[i]) #this is a list of recpt haplos, 0-indexed, empty if none
 			dpick = random.sample(donor,1)[0] #randomly choose a donor sequence
+#random.sample的作用的从donor中随机的选取一个，加不加［0］都一样!
 			vartag = 'VAR'
 			
 			try:
 				if metatype == 'DEL':		#this should be only operations to donors
 					dtid,stretches=maketid(stretches,sizevec[i]/(plansize+2*nligation)+1)
+#plansize：把整个序列分成小块，每小块的大小就是plansize。ligation就是作为一个缓冲区。
 					for d in donor:
 						varcnt += 1
 						varid = vartag+"_"+str(varcnt)
@@ -1156,6 +1159,8 @@ def blocktrunks(trunks,gaptab):
 #	for trunk in trunks:
 #		print trunk
 	remains = trunks.intersect(gaptab,v=True) #only keeping non overlapping trunks
+#Chao:   BEDtools的intersect函数，返回重叠区间，v选项返回不重叠的区间
+#Chao: 	 remains中包含的是trunks中有而在gaptab中没有的区间！！
 #	for remain in remains:
 #		print remain
 	#FIXME: sometimes bedtool error will rise if temporary files were deleted, how to fix in safeway?
@@ -1174,12 +1179,12 @@ def blocktrunks(trunks,gaptab):
 			stretches[j-cnt+1]=cnt
 			for k in xrange(j-cnt+2,j): stretches[k] = 0
 		j += 1; pfeat=feat
-	return remains,stretches
+	return remains,stretches#Chao:oooooo!stretches就是所包含的区间个数，一个区间长度是固定的，就是plansize+2＊nligation
 	#remains: trunks that remains, BED formatted
 	#stretches: if a trunk remain, how far it stretches;
 	#					 counting from 1
 
-def maketrunks(bun):
+def maketrunks(bun):#Chao:返回是一个BEDtools。／BED文件
 	#one trunk will be [ sv_pos-buffer, sv_pos+maxsv+buffer ]
 	#trunks are stored by [ {1:(chr1,sv_pos),2:(chr2,sv_pos),...}, {1:(chr1,sv_pos),2:(chr2,sv_pos),...}, ... ]
 	#all converted to bed format
@@ -1189,16 +1194,17 @@ def maketrunks(bun):
 	burnin=bun.burnin
 	trunks = [] # trunk[i].start = sv[i].pos - nligation; trunk[i+1] = trunk[i].start + plansize + 2*ligation
 	for i in xrange(0,min(hapseq[0].nreferences,maxrefnum)):
-		pos=xrange(burnin,hapseq[0].lengths[i]-plansize-2*nligation-burnin,plansize+2*nligation)
+		pos=xrange(burnin,hapseq[0].lengths[i]-plansize-2*nligation-burnin,plansize+2*nligation)#xrange(x,y,z)start,stop,step
 		trunks.extend([ '%s\t%s\t%s' % (hapseq[0].references[i], str(p), str(p+plansize+2*nligation)) for p in pos ])
 	trunks = pybedtools.BedTool("\n".join([ x for x in trunks ]), from_string=True) #convert to BED
 	return trunks
 
-def maketid(stretches,varstretch):
+def maketid(stretches,varstretch):#此函数的作用是返回够长度的区间下下标，还有就是出去要生成var之后剩下的区间，要生成的那些区间继为0
 	#print stretches
 	#print varstretch
 	#print len(stretches)
 	tids = [t for t, x in enumerate(stretches) if x >= varstretch] #always random pick among min qualifying tids
+#tids中存储的是区间长度够的行（bed中的行，最小的行）
 	if tids == []: raise Exception("cannot allocate genome region for metafile, please reduce plansize!");
 	if varstretch >= 1: #could from any place that has a stretch >= varstretch
 		mtids = [varstretch,tids]
@@ -1206,8 +1212,8 @@ def maketid(stretches,varstretch):
 		mtids = locatemin([stretches[i] for i in tids]) #this is not currently used
 	#print tids
 	#print mtids
-	tid = random.sample(mtids[1],1)[0]	 #locate the tid
-	vtid = stretches[tid]
+	tid = random.sample(mtids[1],1)[0]	#Chao:从满足条件的区间中随机找一个，返回在stretchees中的下标！！！ #locate the tid
+	vtid = stretches[tid]#Chao：有几个区间
 	#print tid
 	for i in xrange(tid,tid+varstretch): stretches[i]=0;						#mark head of stretch used
 	if vtid-varstretch>0: stretches[tid+varstretch]=vtid-varstretch; #mark remaining stretch by its head
@@ -1247,18 +1253,19 @@ def maketid(stretches,varstretch):
 #>>> maketid(s,3)
 #(6, [2, 0, 1, 1, 2, 0, 0, 0, 0, 1])
 
-def expanddist(diststring, cnt):
+def expanddist(diststring, cnt):#Chao:metafile的第二列是sizedist 此函数的作用就是让fix后边跟的值的个数能够与cnt相等，不等的话会调整fix后边树的个数
 	dist=diststring.split('_')
 	uniques = {}
 	new_cnt = 0
 	if dist[0] == 'fix':
 		values = [ int(x) if isint(x) else float(x) for x in dist[1:len(dist)] ]
-		uniques = CountUnique(values)
+		uniques = CountUnique(values)#CounUnique的返回值是个dic，存储values的值的个数
 		sorted_uniques = sorted(uniques.items(), key=operator.itemgetter(1)) 
+#operator.itemgetter的作用是获取对象的各个域的值,这里是key为uniques的第二个值，按照第二值排序，也就是按照值的个数排序
 		#increasing order sorting of values
 		nvalue = len(values)
 		nunique = len(uniques)
-		amp = cnt/nvalue
+		amp = cnt/nvalue#cnt是事件数目
 		rem = cnt-amp*nvalue
 		for item in sorted_uniques:
 			key = item[0]
