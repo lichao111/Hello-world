@@ -66,6 +66,7 @@ def deovlpvar(dic,maxdeovlp=2):
 	while chkvar(vartab) != True and nowdeovlp<maxdeovlp: 
 		varlist=copy.deepcopy(dic['varlist'])
 		ovlptab=vartab.intersect(vartab,c=True,f=0).to_dataframe(names=varbed_names+["ovlap"]) 
+		#chao:c  重叠的数量  f：重叠A的百分之m（至少）
 		#NOTE: f=0 is important so that simple touching is considerred an overlap, which make chkvar work
 		#print ovlptab
 		#print varlist.keys()
@@ -960,7 +961,7 @@ def var2bed(bun):
 	#	ofile.writerow([varcopy[var][4],varcopy[var][5],varcopy[var][5]+varcopy[var][7]+1]+varcopy[var])
 	return varbed
 
-def makevar(bun,metatab,fas=False):         # Chao:change meta to var!!!   Y of N??
+def makevar(bun,metatab,fas=False):         # Chao:change meta to var!!!   Y of N??  Y
 	#metatab = bun.metatab
 	#FIXME: this has to be modified to disallow streteching Ns and random selection in similar size
 	gaptab = bun.gaptab
@@ -977,6 +978,9 @@ def makevar(bun,metatab,fas=False):         # Chao:change meta to var!!!   Y of 
 	#f.write(str(trunks))
 	#f.close()
 	trunks=trunks.to_dataframe()
+#to_dataframe()之后变成如下形式：
+#			  chrom  start  end 
+#			0  chr1     19   89
 	# seqfile,sizestring #random seq from seqfile using sizestring
 	# seqfile #use seqfile exactly
 	metacnt={}; delvec=set(); finsvec=set(); dinsvec=set(); dupvec=set(); travec=set(); idupvec=set(); invvec=set(); itravec=set(); idinsvec=set();
