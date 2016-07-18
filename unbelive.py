@@ -5,7 +5,7 @@ import random,copy
 #tree=[1,[2,[4,[8,[],[]],[9,[],[]]],[5,[10,[],[]],[11,[],[]]]],[3,[6,[12,[],[]],[13,[],[]]],[7,[14,[],[]],[15,[],[]]]]]
 #tree=[0,[1,[11,[],[]],[12,[],[]]],[2,[],[]]]
 tree=['N',['N',['N',['N',[],[]],['Var4',[],[]]],['Var3',['Var3',[],[]],['Var5',[],[]]]],['Var1',['Var1',[],[]],['Var2',[],[]]]]
-fre={};l=0;m=1;n=2;s=0;#fre[0]=random.uniform(0,1)
+l=0;m=1;n=2;s=0;#fre[0]=random.uniform(0,1)
 
 def find_event(t,event=[]):
 	if t:
@@ -109,30 +109,76 @@ print 'event',event
 def mate(tree,event,tail):
 	mat={}
 	for i in event:
-		print i,type(i) 	
+#		print i,type(i) 	
 		for j in tail:
-			print '--------',j,'---------'
+#			print '--------',j,'---------'
 			tree1=copy.deepcopy(tree)
 			w=len(str(j))
 			for k in range(w):
 		
 				a=int(str(j)[::-1][w-1])
-				print a
+#				print a
 				tree1 = tree1[a]
 #				print tree
 				w = w-1
 #			return tree[0] == i
-			print tree1,type(tree1[0]),tree1[0],i
+#			print tree1,type(tree1[0]),tree1[0],i
 			if tree1[0] == i:
-				print 'YES'
+#				print 'YES'
 				mat[j]=i
 	return mat
 #print mate(tree,event,tail)
 mat = mate(tree,event,tail)
-fre={}
+
+#def unit(a):#get the unit of a number
+#	while 1:
+#		a = a%10
+
+def che_odd(a): #check a number is odd or even
+	if a%2 ==0:
+		return False
+	else:
+		return True
+		
+	
+
 def get_fre(mat,tail):
+	fre={}
+	fre[0]=random.uniform(0,1)
 	for i in tail:
-			
+
+#		print fre
+		w = len(str(i))
+		for  j in range(w-1):
+			#print i/(10**(w-1))
+			fre[i/(10**(w-1))]=random.uniform(0,1)
+			w -= 1
+			#fre[i] *= fre[i/(10**(w-1))]
+	print fre
+	for i in tail:
+		fre[i]=1
+		l=copy.copy(i)
+		
+#		if che_odd(i):
+#			fre[i] = 1-fre[0]
+#		else:
+#			fre[i] = fre[0]
+		print l
+		w=len(str(i))
+		for k in range(w):
+			#l=l/(10**(w-1))
+			if che_odd(l):
+				fre[i] *= 1-fre[l/(10)]
+				print 'fre[%s]' %(i),'*=','1-fre[%s]'%(l/10)
+			else:
+				fre[i] *= fre[l/(10)]
+				print 'fre[%s]'%i,'*=','fre[%s]'%(l/10)
+			l = l/10		
+	
+	return fre
+
+print get_fre(mat,tail)	
+
 		
 	
 	
