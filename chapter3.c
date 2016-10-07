@@ -6,6 +6,7 @@
 //int total (int);
 //int jiechengtotal(int);
 double pit();
+int translate(int );
 int main()
 {
 	/*printf("please input the number which you want to get its reverse:");
@@ -20,9 +21,10 @@ int main()
 	//scanf("%d",&n);
 	//printf("%d\n",jiechengtotal(n));
 	//printf("pi:%f\n",pit());
-	printf("please input the number which you want to check whether its a zhishu:");
-	int n;	scanf("%d",&n);
-	printf("%c",zhishu(n));
+	//printf("please input the number which you want to check whether its a zhishu:");
+	//int n;	scanf("%d",&n);
+	//printf("%d\n",zhishu(n));
+	printf("%d\n",translate(15));
 	return 0;
 }
 /*
@@ -76,17 +78,28 @@ double pit()
 	}
 	return pi*4;
 }
-
-bool zhishu(int n)
+int zhishu(int n)
 {
 	int i, j= sqrt(n);
 	for(i=2;i<=j;i++)
 	{
 		if (n%i==0)
-			return false;
+			return 0;
 	}
-	return true;
+	return 1;
 }
 
-
+int translate(int n )
+{
+	printf("translate to ?\n");
+	int k,m=0,l=1;
+	scanf("%d",&k);
+	while (n!=0)
+	{
+		m += l*(n%k);
+		l *= 10;
+		n /=k;
+	}
+	return m;
+}
 
