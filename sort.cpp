@@ -56,15 +56,20 @@ int main()
 	puts(a);
 	char b[5];
 	gets(b);
-	puts(b);*/
+	puts(b);
 	char a[10];
 	strcpy(a, "work");
-	printf("%d\n",strlen(a));
+	printf("%ld\n",strlen(a));
 	printf("%s\n",strcpy(a,"study"));
 	printf("%s\n",strcat(a,"hard"));
 	printf("%d\n",strcmp(a,"studyhard"));
-	char d[]="I am";
-	printf("%s\n",strcpy("what","Chao"));
+	char d[]="I am";*/
+	char a[]="chaoLi";
+	char b[]="";
+	long unsigned int c = strlen(a);
+	printf("%ld\n",c);
+	printf("%s\n",strcpy(b,a));
+	printf("%s\n",b);
 	return 0;
 }
 
