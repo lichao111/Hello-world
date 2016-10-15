@@ -28,7 +28,7 @@ int func(int l, int r,int m)
 	int i;
 	int n=0;
 	for(i=l;i<=r;i++)
-		if(num(i)==m)
+		if(func1(i)==m)
 			n++;
 	if (n!=0)
 		return n;
@@ -36,12 +36,21 @@ int func(int l, int r,int m)
 		return -1;
 }
 
+int func1(x)
+{
+int countx =0;
+while(x)
+{
+countx ++;
+x = x&(x-1);
+}
+return countx;
+} 
+
 int main()
 {
 	int l,r,m;
 	scanf("%d\n%d\n%d",&l,&r,&m);
-	l=num2bin(l);
-	r=num2bin(r);
 	printf("%d\n",func(l,r,m));
 	return 0;
 }
