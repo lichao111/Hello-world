@@ -1,0 +1,6 @@
+Enter two numbers:
+the sun of 2 and 3 is 5
+the sum is 15
+Enter two numbers:
+the sun of 3 and 4 is 7
+the sum is 18
